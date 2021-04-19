@@ -1,0 +1,278 @@
+﻿
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+    <title>Add</title>
+    <link href="~/layui/css/layui.css" rel="stylesheet" />
+    <script src="~/layui/layui.js"></script>
+    <script src="~/lib/jquery/dist/jquery.js"></script>
+</head>
+<body>
+    <form class="layui-form" method="post" enctype="multipart/form-data" lay-filter="formTest" action="">
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">图片</label>
+            <div class="layui-input-block">
+                <input type="file" name="img" id="img" lay-verify="title" autocomplete="off"class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">姓名</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" lay-verify="title" autocomplete="off" placeholder="请输入姓名" class="layui-input">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">性别</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="sex" id="sex" lay-skin="switch" value="男" lay-text="男|女" >
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <div class="layui-inline">
+                <label class="layui-form-label">年龄</label>
+                <div class="layui-input-inline">
+                    <input type="tel" name="age"  autocomplete="off" class="layui-input">
+                </div>
+            </div>
+
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">联动选择框</label>
+            <div class="layui-input-inline">
+                <select name="quiz1" lay-filter="sheng" id="sheng" >
+                    <option value="-1">请选择</option>
+                </select>
+            </div>
+            <div class="layui-input-inline">
+                <select name="quiz2" lay-filter="shi" id="shi">
+
+                </select>
+            </div>
+            <div class="layui-input-inline">
+                <select name="quiz3" id="qu" >
+
+                </select>
+            </div>
+        </div>
+
+        <div class="layui-form-item">
+            <label class="layui-form-label">复选框</label>
+            <div class="layui-input-block">
+                <input type="checkbox" name="hobby" title="写作" value="写作" >
+                <input type="checkbox" name="hobby" title="阅读" value="阅读" >
+                <input type="checkbox" name="hobby" title="游戏" value="游戏">
+            </div>
+        </div>
+
+
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">普通文本域</label>
+            <div class="layui-input-block">
+                <textarea class="layui-textarea layui-hide" name="remark" lay-verify="content" id="LAY_demo_editor"></textarea>
+            </div>
+        </div>
+        <!--<div class="layui-form-item layui-form-text">
+      <label class="layui-form-label">编辑器</label>
+      <div class="layui-input-block">
+        <textarea class="layui-textarea layui-hide" name="content" lay-verify="content" id="LAY_demo_editor"></textarea>
+      </div>
+    </div>-->
+        <div class="layui-form-item">
+            <div class="layui-input-block">
+                <button type="submit" class="layui-btn" lay-submit="" lay-filter="demo1">立即提交</button>
+
+                <button type="reset" class="layui-btn layui-btn-primary">重置</button>
+            </div>
+        </div>
+    </form>
+    <script>
+
+        var id = location.href.split("=")[1];
+        $(function () {
+            $.ajax(
+                {
+                    url: '/User/Sheng',
+                    data: {},
+                    async: false,
+                    type: 'post',
+                    success: function (d) {
+                        console.log(d);
+                        $(d.data).each(function () {
+                            $("#sheng").append("<option value='" + this.cid + "'>" + this.cname + "</option>");
+                        });
+                    }
+                });
+        });
+
+
+        //function shi(value)
+        //{
+        //    console.log(value);
+        //}
+        layui.use(['form', 'layedit'], function () {
+
+            var form = layui.form; //只有执行了这一步，部分表单元素才会自动修饰成功
+            var layedit = layui.layedit;
+        
+            var index = layedit.build('LAY_demo_editor'); //建立编辑器
+            console.log(index);
+            form.on('select(sheng)', function (data) {
+
+                console.log(data.value); //得到被选中的值
+                var pid = data.value;
+                $.ajax(
+                    {
+                        url: '/User/Shi',
+                        data: { pid: pid },
+                        type: 'post',
+                        async: false,
+                        success: function (d) {
+                            $.each(d.data, function (i, v)
+                            {
+                                $("#shi").html("<option value='" + v.cid + "'>" + v.cname + "</option>")
+                            });
+                            form.render('select');
+                        }
+                    });
+            });  
+
+            form.on('select(shi)', function (data) {
+                //form.render('select');
+                console.log(data.value); //得到被选中的值
+                var pid = data.value;
+                $.ajax(
+                    {
+                        url: '/User/Qu',
+                        data: { pid: pid },
+                        type: 'post',
+                        async: false,
+                        success: function (d) {
+                            console.log(d.data);
+
+                            $(d.data).each(function () {
+                                $("#qu").html("<option value='" + this.cid + "'>" + this.cname + "</option>");
+                            });
+                            form.render('select');
+                        }
+                    });
+            });
+
+            form.on('submit(demo1)', function (data) {
+                
+                var _remark = layedit.getContent(index)
+                data.field.remark = _remark;
+                if ($("#sex").prop("checked") == false)
+                {
+                    data.field.sex = "女";
+                }
+                var hobby = "";
+                $("input[name=hobby]:checked").each(function ()
+                {
+                    hobby += $(this).val()+',';
+                });
+                console.log($("#sheng").val());
+                var address = $("#sheng option:checked").text() + $("#shi").text() + $("#qu").text();
+                data.field.address = address;
+
+                //var $ = layui.$;
+                //$.each($("#img")[0].files, function (i, v)
+                //{
+                //    console.log(v);
+                //    
+                //}); 
+                var datas = new FormData();
+                datas.append("Img",$("#img")[0].files[0]);
+                datas.append("Name", data.field.name);
+                datas.append("Sex", data.field.sex);
+                datas.append("Age", data.field.age);
+                datas.append("Hobby", hobby);
+                datas.append("Id", id);
+                datas.append("Remark", data.field.remark);
+                datas.append("Address", address);
+                console.log(datas);
+
+
+                $.ajax(
+                    {
+                        url: '/User/AddData',
+                        data: datas,
+                        type: 'post',
+                        contentType: false,
+                        processData: false,
+                        success: function (d)
+                        {
+                            alert(d.msg);
+                            if (d.state) {
+                                var index = parent.layer.getFrameIndex(window.name); //先得到当前iframe层的索引
+                                parent.location.reload();//刷新父页面，注意一定要在关闭当前iframe层之前执行刷新
+                                parent.layer.close(index); //再执行关闭
+                            }
+                          
+                        }
+                    });
+                return false;
+            });
+
+            if (id!= null)
+            {
+                
+                $.ajax(
+                    {
+                        url: '/User/GetById',
+                        data: { id: id },
+                        type: 'post',
+                        success: function (d)
+                        {
+                            //var hobby = d.data.hobby.split(",")[0];
+                            //console.log(hobby);
+                            //console.log(hobby);
+                            var hooby1 = d.data.hobby.split(",")[0];
+                            var hooby2 = d.data.hobby.split(",")[1];
+                            var hooby3 = d.data.hobby.split(",")[2];
+                            var ss = [];
+                            ss.push(hooby1);
+                            ss.push(hooby2);
+                            ss.push(hooby3);
+                            console.log(ss);
+
+                            $(ss).each(function (i,v)
+                            {
+
+                                console.log($("input[name='hobby']")[0].value);
+                                console.log(v);
+                                if ($("input[name='hobby']")[0].value == v) {
+       
+                                    $("input[name='hobby']")[0].checked=true;
+                                }
+                                if ($("input[name='hobby']")[1].value == v) {
+                                    $("input[name='hobby']")[1].checked=true;
+                                }
+                                if ($("input[name='hobby']")[2].value == v) {
+                                    $("input[name='hobby']")[2].checked=true;
+                                }
+                                
+                            });
+                            form.val("formTest", { //formTest 即 class="layui-form" 所在元素属性 lay-filter="" 对应的值
+                                "name": d.data.name // "name": "value"
+                                , "sex": d.data.sex == "男" ? true : false
+                                , "age": d.data.age
+                                , "remark": d.data.remark
+                                
+                            });
+                            index = layedit.build('LAY_demo_editor');
+                        }
+                    });
+            }
+        });  
+    </script>
+</body>
+</html>
